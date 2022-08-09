@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(AuthServiceApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(AuthServiceApplication.class, args);
+  }
 
-	@GetMapping("/")
-	public static String hello(){
-		return "Hello, World";
-	}
+  @GetMapping("/")
+  public static String hello() {
+    return "Hello";
+  }
 }
