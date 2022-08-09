@@ -1,5 +1,7 @@
 package com.easy.authservice.controllers;
 
+import com.easy.authservice.dtos.ResponseDto;
+import com.easy.authservice.dtos.user.DataUser;
 import com.easy.authservice.dtos.user.RegisterInputDto;
 import com.easy.authservice.exceptions.ApiRequestException;
 import com.easy.authservice.models.User;
@@ -24,12 +26,13 @@ public class UserController {
   }
 
   @GetMapping
-  public ResponseEntity<Collection<User>> getUsers() {
-    return ResponseEntity.ok(userRepository.findAll());
+  public ResponseEntity<ResponseDto<Collection<User>>> getUsers() {
+    var data = userRepository.findAll();
+    return ResponseEntity.ok(new ResponseDto<>(data));
   }
 
   @PostMapping("register")
-  public ResponseEntity<User> register(@Valid @RequestBody RegisterInputDto data) {
+  public ResponseEntity<ResponseDto<DataUser>> register(@Valid @RequestBody RegisterInputDto data) {
 
     var exist = userRepository.findByUsername(data.username);
     if (exist != null)
@@ -41,6 +44,6 @@ public class UserController {
     var user = new User(data.username, hashedPassword);
     userRepository.save(user);
 
-    return ResponseEntity.ok(user);
+    return ResponseEntity.ok(new ResponseDto<>(new DataUser(user)));
   }
 }
