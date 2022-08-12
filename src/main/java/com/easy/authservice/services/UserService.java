@@ -19,6 +19,7 @@ import com.easy.authservice.models.RefreshToken;
 import com.easy.authservice.models.User;
 import com.easy.authservice.repositories.RefreshTokenRepository;
 import com.easy.authservice.repositories.UserRepository;
+import com.easy.authservice.services.BlacklistTokenManager.IBlacklistTokenManger;
 import com.easy.authservice.services.TokenManager.ITokenManager;
 
 @Service
@@ -27,12 +28,14 @@ public class UserService implements IUserService {
   private UserRepository userRepository;
   private RefreshTokenRepository refreshTokenRepository;
   private ITokenManager tokenManager;
+  private IBlacklistTokenManger blacklistTokenManger;
 
   public UserService(UserRepository userRepository, ITokenManager tokenManager,
-      RefreshTokenRepository refreshTokenRepository) {
+      RefreshTokenRepository refreshTokenRepository, IBlacklistTokenManger blacklistTokenManger) {
     this.userRepository = userRepository;
     this.tokenManager = tokenManager;
     this.refreshTokenRepository = refreshTokenRepository;
+    this.blacklistTokenManger = blacklistTokenManger;
   }
 
   @Override
@@ -131,7 +134,7 @@ public class UserService implements IUserService {
 
     refreshTokenRepository.delete(oldRefreshToken);
 
-    // TODO: Blacklist Token
+    blacklistTokenManger.createToken(oldRefreshToken.getId());
 
     if (error == "TOKEN_EXPIRED")
       throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Token Not Valid");

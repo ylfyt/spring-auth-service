@@ -11,6 +11,7 @@ import com.easy.authservice.dtos.user.AccessTokenPayload;
 import com.easy.authservice.models.RefreshToken;
 import com.easy.authservice.models.User;
 import com.easy.authservice.repositories.RefreshTokenRepository;
+import com.easy.authservice.services.BlacklistTokenManager.IBlacklistTokenManger;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -20,7 +21,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 public class TokenManager implements ITokenManager {
 
   public static final long JWT_REFRESH_TOKEN_EXPIRY_TIME = 24 * 60 * 60; // 1 Day
-  public static final long JWT_ACCESS_TOKEN_EXPIRY_TIME = 60 * 60; // 10 Minutes
+  public static final long JWT_ACCESS_TOKEN_EXPIRY_TIME = 2 * 60; // 10 Minutes
 
   @Value("${jwt.REFRESH_TOKEN_SECRET_KEY}")
   private String refreshSecret;
@@ -28,9 +29,11 @@ public class TokenManager implements ITokenManager {
   private String accessSecret;
 
   private final RefreshTokenRepository refreshTokenRepository;
+  private final IBlacklistTokenManger blacklistTokenManger;
 
-  public TokenManager(RefreshTokenRepository refreshTokenRepository) {
+  public TokenManager(RefreshTokenRepository refreshTokenRepository, IBlacklistTokenManger blacklistTokenManger) {
     this.refreshTokenRepository = refreshTokenRepository;
+    this.blacklistTokenManger = blacklistTokenManger;
   }
 
   @Override
@@ -92,7 +95,9 @@ public class TokenManager implements ITokenManager {
       if (username == null || jid == null)
         return null;
 
-      // TODO: Check Blacklist
+      var exist = blacklistTokenManger.isRefreshTokenIdExist(jid);
+      if (exist)
+        return null;
 
       return new AccessTokenPayload(username);
     } catch (Exception e) {
