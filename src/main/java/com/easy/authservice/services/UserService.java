@@ -10,11 +10,14 @@ import org.springframework.stereotype.Service;
 import com.easy.authservice.dtos.ResponseDto;
 import com.easy.authservice.dtos.user.AccessTokenDto;
 import com.easy.authservice.dtos.user.DataUser;
+import com.easy.authservice.dtos.user.RefreshTokenDto;
 import com.easy.authservice.dtos.user.RegisterInputDto;
 import com.easy.authservice.dtos.user.TokenDto;
 import com.easy.authservice.dtos.user.VerifyAccessTokenDto;
 import com.easy.authservice.exceptions.ApiRequestException;
+import com.easy.authservice.models.RefreshToken;
 import com.easy.authservice.models.User;
+import com.easy.authservice.repositories.RefreshTokenRepository;
 import com.easy.authservice.repositories.UserRepository;
 import com.easy.authservice.services.TokenManager.ITokenManager;
 
@@ -22,11 +25,14 @@ import com.easy.authservice.services.TokenManager.ITokenManager;
 public class UserService implements IUserService {
 
   private UserRepository userRepository;
+  private RefreshTokenRepository refreshTokenRepository;
   private ITokenManager tokenManager;
 
-  public UserService(UserRepository userRepository, ITokenManager tokenManager) {
+  public UserService(UserRepository userRepository, ITokenManager tokenManager,
+      RefreshTokenRepository refreshTokenRepository) {
     this.userRepository = userRepository;
     this.tokenManager = tokenManager;
+    this.refreshTokenRepository = refreshTokenRepository;
   }
 
   @Override
@@ -79,5 +85,59 @@ public class UserService implements IUserService {
     return ResponseEntity.ok(
         new ResponseDto<>(
             new VerifyAccessTokenDto(payload != null, payload)));
+  }
+
+  @Override
+  public ResponseEntity<ResponseDto<TokenDto>> refreshToken(RefreshTokenDto data) {
+    var error = tokenManager.verifyRefreshToken(data.token);
+
+    RefreshToken oldRefreshToken = null;
+    if (error == "TOKEN_EXPIRED" || error == null) {
+      oldRefreshToken = refreshTokenRepository.findByToken(data.token);
+      if (oldRefreshToken != null) {
+        refreshTokenRepository.delete(oldRefreshToken);
+      }
+    }
+
+    if (error != null || oldRefreshToken == null)
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Token is not valid");
+
+    var user = userRepository.findById(oldRefreshToken.userId).orElse(null);
+    if (user == null)
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "User not found");
+
+    StringBuilder refreshToken = new StringBuilder();
+    Long refreshTokenId = tokenManager.createRefreshToken(user, refreshToken);
+    if (refreshTokenId == null || refreshToken.toString().isEmpty())
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Already logged in with other devices");
+
+    String accessToken = tokenManager.createAccessToken(user, refreshTokenId);
+
+    return ResponseEntity.ok(
+        new ResponseDto<>(
+            new TokenDto(accessToken, refreshToken.toString())));
+  }
+
+  @Override
+  public ResponseEntity<ResponseDto<Boolean>> logout(RefreshTokenDto data) {
+    var error = tokenManager.verifyRefreshToken(data.token);
+
+    if (error == "NOT_VALID")
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Token Not Valid");
+
+    var oldRefreshToken = refreshTokenRepository.findByToken(data.token);
+    if (oldRefreshToken == null)
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Token Not Valid");
+
+    refreshTokenRepository.delete(oldRefreshToken);
+
+    // TODO: Blacklist Token
+
+    if (error == "TOKEN_EXPIRED")
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Token Not Valid");
+
+    return ResponseEntity.ok(
+        new ResponseDto<>(
+            true));
   }
 }

@@ -7,7 +7,9 @@ import org.springframework.http.ResponseEntity;
 import com.easy.authservice.dtos.ResponseDto;
 import com.easy.authservice.dtos.user.AccessTokenDto;
 import com.easy.authservice.dtos.user.DataUser;
+import com.easy.authservice.dtos.user.RefreshTokenDto;
 import com.easy.authservice.dtos.user.RegisterInputDto;
+import com.easy.authservice.dtos.user.TokenDto;
 import com.easy.authservice.dtos.user.VerifyAccessTokenDto;
 import com.easy.authservice.models.User;
 
@@ -19,4 +21,8 @@ public interface IUserService {
   public ResponseEntity<ResponseDto<DataUser>> login(RegisterInputDto data);
 
   public ResponseEntity<ResponseDto<VerifyAccessTokenDto>> verifyAccessToken(AccessTokenDto data);
+
+  public ResponseEntity<ResponseDto<TokenDto>> refreshToken(RefreshTokenDto data);
+
+  public ResponseEntity<ResponseDto<Boolean>> logout(RefreshTokenDto data);
 }

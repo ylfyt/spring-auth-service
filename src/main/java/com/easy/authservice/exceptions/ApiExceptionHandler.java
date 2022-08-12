@@ -2,6 +2,7 @@ package com.easy.authservice.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,6 +25,14 @@ public class ApiExceptionHandler {
       var newE = (MethodArgumentNotValidException) e;
       var err = new ResponseDto<>(status.name(),
           newE.getFieldError().getField() + " " + newE.getFieldError().getDefaultMessage(), false,
+          status.value(), null);
+      return new ResponseEntity<>(err, status);
+    }
+
+    if (e instanceof HttpMessageNotReadableException) {
+      var status = HttpStatus.BAD_REQUEST;
+      var err = new ResponseDto<>(status.name(),
+          "Required Body is Missing", false,
           status.value(), null);
       return new ResponseEntity<>(err, status);
     }
