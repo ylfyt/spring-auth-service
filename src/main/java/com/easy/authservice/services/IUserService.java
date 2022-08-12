@@ -13,4 +13,6 @@ public interface IUserService {
   public ResponseEntity<ResponseDto<Collection<User>>> getUsers();
 
   public ResponseEntity<ResponseDto<DataUser>> register(RegisterInputDto data);
+
+  public ResponseEntity<ResponseDto<DataUser>> login(RegisterInputDto data);
 }

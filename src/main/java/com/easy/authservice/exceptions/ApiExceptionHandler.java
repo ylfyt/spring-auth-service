@@ -2,6 +2,7 @@ package com.easy.authservice.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -16,6 +17,15 @@ public class ApiExceptionHandler {
       var newE = (ApiRequestException) e;
       var err = new ResponseDto<>(newE.getStatus().name(), newE.getMessage(), false, newE.getStatus().value(), null);
       return new ResponseEntity<>(err, newE.getStatus());
+    }
+
+    if (e instanceof MethodArgumentNotValidException) {
+      var status = HttpStatus.BAD_REQUEST;
+      var newE = (MethodArgumentNotValidException) e;
+      var err = new ResponseDto<>(status.name(),
+          newE.getFieldError().getField() + " " + newE.getFieldError().getDefaultMessage(), false,
+          status.value(), null);
+      return new ResponseEntity<>(err, status);
     }
 
     // LOGGING

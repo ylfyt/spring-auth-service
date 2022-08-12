@@ -23,4 +23,16 @@ public class BaseModel {
   @JsonProperty
   @UpdateTimestamp
   private Date updatedAt;
+
+  public Long getId() {
+    return id;
+  }
+
+  public Date getCreatedAt() {
+    return createdAt;
+  }
+
+  public Date getUpdatedAt() {
+    return updatedAt;
+  }
 }

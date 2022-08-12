@@ -13,14 +13,17 @@ import com.easy.authservice.dtos.user.RegisterInputDto;
 import com.easy.authservice.exceptions.ApiRequestException;
 import com.easy.authservice.models.User;
 import com.easy.authservice.repositories.UserRepository;
+import com.easy.authservice.services.TokenManager.ITokenManager;
 
 @Service
 public class UserService implements IUserService {
 
   private UserRepository userRepository;
+  private ITokenManager tokenManager;
 
-  public UserService(UserRepository userRepository) {
+  public UserService(UserRepository userRepository, ITokenManager tokenManager) {
     this.userRepository = userRepository;
+    this.tokenManager = tokenManager;
   }
 
   @Override
@@ -42,5 +45,23 @@ public class UserService implements IUserService {
   public ResponseEntity<ResponseDto<Collection<User>>> getUsers() {
     var data = userRepository.findAll();
     return ResponseEntity.ok(new ResponseDto<>(data));
+  }
+
+  @Override
+  public ResponseEntity<ResponseDto<DataUser>> login(RegisterInputDto data) {
+    var user = userRepository.findByUsername(data.username);
+    if (user == null)
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Username or Password is Wrong");
+
+    var bCryptPasswordEncoder = new BCryptPasswordEncoder();
+    if (!bCryptPasswordEncoder.matches(data.password, user.getPassword()))
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Username or Password is Wrong");
+
+    StringBuilder token = new StringBuilder();
+    Long refreshTokenId = tokenManager.createRefreshToken(user, token);
+    if (refreshTokenId == null)
+      throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Already logged in with other devices");
+
+    return ResponseEntity.ok(new ResponseDto<>(new DataUser(user, token.toString())));
   }
 }

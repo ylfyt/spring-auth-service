@@ -32,4 +32,9 @@ public class UserController {
   public ResponseEntity<ResponseDto<DataUser>> register(@Valid @RequestBody RegisterInputDto data) {
     return userService.register(data);
   }
+
+  @PostMapping("login")
+  public ResponseEntity<ResponseDto<DataUser>> login(@Valid @RequestBody RegisterInputDto data) {
+    return userService.login(data);
+  }
 }
