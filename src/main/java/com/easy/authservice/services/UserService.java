@@ -8,8 +8,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.easy.authservice.dtos.ResponseDto;
+import com.easy.authservice.dtos.user.AccessTokenDto;
 import com.easy.authservice.dtos.user.DataUser;
 import com.easy.authservice.dtos.user.RegisterInputDto;
+import com.easy.authservice.dtos.user.TokenDto;
+import com.easy.authservice.dtos.user.VerifyAccessTokenDto;
 import com.easy.authservice.exceptions.ApiRequestException;
 import com.easy.authservice.models.User;
 import com.easy.authservice.repositories.UserRepository;
@@ -57,11 +60,24 @@ public class UserService implements IUserService {
     if (!bCryptPasswordEncoder.matches(data.password, user.getPassword()))
       throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Username or Password is Wrong");
 
-    StringBuilder token = new StringBuilder();
-    Long refreshTokenId = tokenManager.createRefreshToken(user, token);
-    if (refreshTokenId == null)
+    StringBuilder refreshToken = new StringBuilder();
+    Long refreshTokenId = tokenManager.createRefreshToken(user, refreshToken);
+    if (refreshTokenId == null || refreshToken.toString().isEmpty())
       throw new ApiRequestException(HttpStatus.BAD_REQUEST, "Already logged in with other devices");
 
-    return ResponseEntity.ok(new ResponseDto<>(new DataUser(user, token.toString())));
+    String accessToken = tokenManager.createAccessToken(user, refreshTokenId);
+
+    return ResponseEntity
+        .ok(new ResponseDto<>(new DataUser(user, new TokenDto(accessToken, refreshToken.toString()))));
+  }
+
+  @Override
+  public ResponseEntity<ResponseDto<VerifyAccessTokenDto>> verifyAccessToken(AccessTokenDto data) {
+
+    var payload = tokenManager.verifyAccessToken(data.token);
+
+    return ResponseEntity.ok(
+        new ResponseDto<>(
+            new VerifyAccessTokenDto(payload != null, payload)));
   }
 }

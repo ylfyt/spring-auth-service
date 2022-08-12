@@ -4,22 +4,22 @@ import com.easy.authservice.models.User;
 
 public class DataUser {
   private User user;
-  private String token = "";
+  private TokenDto token;
 
   public DataUser(User user) {
     this.user = user;
   }
 
-  public DataUser(User user, String token) {
+  public DataUser(User user, TokenDto tokenData) {
     this.user = user;
-    this.token = token;
+    this.token = tokenData;
   }
 
   public User getUser() {
     return user;
   }
 
-  public String getToken() {
+  public TokenDto getToken() {
     return token;
   }
 }

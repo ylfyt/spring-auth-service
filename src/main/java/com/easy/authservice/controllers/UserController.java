@@ -1,8 +1,10 @@
 package com.easy.authservice.controllers;
 
 import com.easy.authservice.dtos.ResponseDto;
+import com.easy.authservice.dtos.user.AccessTokenDto;
 import com.easy.authservice.dtos.user.DataUser;
 import com.easy.authservice.dtos.user.RegisterInputDto;
+import com.easy.authservice.dtos.user.VerifyAccessTokenDto;
 import com.easy.authservice.models.User;
 import com.easy.authservice.services.IUserService;
 
@@ -36,5 +38,10 @@ public class UserController {
   @PostMapping("login")
   public ResponseEntity<ResponseDto<DataUser>> login(@Valid @RequestBody RegisterInputDto data) {
     return userService.login(data);
+  }
+
+  @PostMapping("verify-access-token")
+  public ResponseEntity<ResponseDto<VerifyAccessTokenDto>> verifyAccessToken(@Valid @RequestBody AccessTokenDto data) {
+    return userService.verifyAccessToken(data);
   }
 }
