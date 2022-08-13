@@ -18,12 +18,12 @@ import java.util.Collection;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("user")
-public class UserController {
+@RequestMapping("auth")
+public class AuthController {
 
   private final IUserService userService;
 
-  public UserController(IUserService userService) {
+  public AuthController(IUserService userService) {
     this.userService = userService;
   }
 
