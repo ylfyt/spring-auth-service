@@ -21,7 +21,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 public class TokenManager implements ITokenManager {
 
   public static final long JWT_REFRESH_TOKEN_EXPIRY_TIME = 24 * 60 * 60; // 1 Day
-  public static final long JWT_ACCESS_TOKEN_EXPIRY_TIME = 2 * 60; // 10 Minutes
+  public static final long JWT_ACCESS_TOKEN_EXPIRY_TIME = 60 * 60; // 60 Minutes
 
   @Value("${jwt.REFRESH_TOKEN_SECRET_KEY}")
   private String refreshSecret;
@@ -63,10 +63,9 @@ public class TokenManager implements ITokenManager {
     claims.put("username", user.getUsername());
     claims.put("jid", refreshTokenId);
 
-    String token = Jwts.builder().setClaims(claims)
+      return Jwts.builder().setClaims(claims)
         .setExpiration(new Date(System.currentTimeMillis() + JWT_ACCESS_TOKEN_EXPIRY_TIME * 1000))
         .signWith(SignatureAlgorithm.HS512, accessSecret).compact();
-    return token;
   }
 
   @Override
@@ -89,11 +88,11 @@ public class TokenManager implements ITokenManager {
 
       Map<String, Object> claims = Jwts.parser().setSigningKey(accessSecret).parseClaimsJws(token).getBody();
 
-      String username = (String) claims.get("username");
-      Long jid = Long.valueOf((int) claims.get("jid"));
+      if (!claims.containsKey("username") && !claims.containsKey("jid"))
+        return  null;
 
-      if (username == null || jid == null)
-        return null;
+      String username = (String) claims.get("username");
+      Long jid = (long) (int) claims.get("jid");
 
       var exist = blacklistTokenManger.isRefreshTokenIdExist(jid);
       if (exist)
