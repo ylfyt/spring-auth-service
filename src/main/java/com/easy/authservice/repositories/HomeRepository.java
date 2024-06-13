@@ -13,6 +13,6 @@ public interface HomeRepository extends JpaRepository<Home, Long> {
     @Query(nativeQuery = true, value = "SELECT h.* FROM home h")
     public Collection<Home> find();
 
-    @Query(nativeQuery = true, value = "SELECT pg_sleep(10)")
+    @Query(nativeQuery = true, value = "SELECT pg_sleep(3)")
     public void execSleep();
 }
